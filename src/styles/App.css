@@ -1,0 +1,76 @@
+/* Pantalla de Inicio */
+.home-screen {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-height: 100vh;
+  background: linear-gradient(135deg, #f0f4f1 0%, #d9e8d1 100%);
+  padding: 40px 20px;
+}
+
+.main-logo-hero {
+  width: 200px; /* Aquí ajustas qué tan grande quieres el logo */
+  height: auto;
+  filter: drop-shadow(0 5px 15px rgba(0,0,0,0.1));
+  margin-bottom: 10px;
+}
+
+.brand-title {
+  font-size: 2.5rem;
+  color: #1b5e20;
+  font-weight: 800;
+  margin: 0;
+}
+
+.brand-tagline {
+  color: #4caf50;
+  font-weight: 500;
+  margin-bottom: 40px;
+}
+
+/* Tablero de Botones */
+.dashboard-menu {
+  display: grid;
+  grid-template-columns: 1fr; /* Una columna para móvil */
+  gap: 15px;
+  width: 100%;
+  max-width: 400px;
+}
+
+/* Si la pantalla es ancha (PC), usa 2 columnas */
+@media (min-width: 600px) {
+  .dashboard-menu { grid-template-columns: 1fr 1fr; max-width: 600px; }
+}
+
+.menu-card {
+  background: white;
+  display: flex;
+  align-items: center;
+  padding: 20px;
+  border-radius: 18px;
+  text-decoration: none;
+  color: #333;
+  box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+  transition: all 0.3s ease;
+}
+
+.menu-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+}
+
+.card-icon {
+  margin-right: 15px;
+  padding: 10px;
+  border-radius: 12px;
+  color: white;
+}
+
+.agri { background: #2e7d32; }
+.maps { background: #1565c0; }
+.reports { background: #f57c00; }
+.admin { background: #455a64; }
+
+.card-info h3 { margin: 0; font-size: 1.1rem; }
+.card-info p { margin: 0; font-size: 0.85rem; color: #777; }
+
