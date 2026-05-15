@@ -396,6 +396,7 @@ const ReportesBanagro = () => {
         </div>
       </div>
 
+
 {/* --- SECCIÓN 2: RESUMEN GENERAL --- */}
       <div style={{ marginTop: '30px' }}>
         <h2 style={{ color: '#1b5e20', borderLeft: '5px solid #2e7d32', paddingLeft: '15px', marginBottom: '20px' }}>
