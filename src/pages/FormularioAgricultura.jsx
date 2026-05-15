@@ -2,13 +2,12 @@ import React, { useState, useEffect } from 'react';
 import { supabase } from '../api/supabaseClient';
 import Input8Metros from '../components/Input8Metros';
 import BotonGuardar from '../components/BotonGuardar';
+import { estaEnLinea, guardarLocalmente } from '../utils/offlineHelper';
 
-// --- CONFIGURACIÓN DE COLORES (Ciclo de Cintas Urabá) ---
-const ORDEN_COLORES = ['Roja', 'Café', 'Negra', 'Naranja', 'Verde', 'Amarilla', 'Blanca', 'Azul'];
+const ORDEN_COLORES = ['Naranja', 'Negra', 'Café', 'Roja', 'Azul', 'Blanca', 'Amarilla', 'Verde'];
 const MAPA_COLORES_HEX = {
-  'Roja': '#ffcdd2', 'Café': '#d7ccc8', 'Negra': '#cfd8dc', 
-  'Naranja': '#ffe0b2', 'Verde': '#c8e6c9', 'Amarilla': '#fff9c4', 
-  'Blanca': '#ffffff', 'Azul': '#bbdefb'
+  'Naranja': '#ffe0b2', 'Negra': '#cfd8dc', 'Café': '#d7ccc8', 'Roja': '#ffcdd2',
+  'Azul': '#bbdefb', 'Blanca': '#ffffff', 'Amarilla': '#fff9c4', 'Verde': '#c8e6c9'
 };
 
 const FormularioAgricultura = () => {
@@ -19,52 +18,87 @@ const FormularioAgricultura = () => {
   const [paso, setPaso] = useState(1);
 
   const [form, setForm] = useState({
-    // --- PASO 1: CABECERA ---
     finca_id: '', clon_id: '', agricultor_id: '', desmachador_id: '', evaluador_id: '',
-    lote: '', semana: '', area_ha: '', punto_muestreo: 1, latitud_wgs84: null, longitud_wgs84: null,
-    color_inicio: '',
-
-    // --- PASO 2: REPORTE_COSECHA ---
+    lote: '', semana: '', anio: new Date().getFullYear().toString(), area_ha: '', punto_muestreo: 1, 
+    latitud_wgs84: null, longitud_wgs84: null, color_inicio: '', observaciones_operador: '',
     plantas_prontas: 0, planta_a_recuperar: 0, plantas_improductivas: 0, plantas_huerfanas: 0,
     pp_bacota: 0, pp_1semanas: 0, pp_2semanas: 0, pp_3semanas: 0, pp_4semanas: 0, pp_5semanas: 0,
     pp_6semanas: 0, pp_7semanas: 0, pp_8semanas: 0, pp_9semanas: 0, pp_10semanas: 0, pp_11semanas: 0,
-    pc_2_2_5: 0, pc_2_5_3: 0, pc_3_3_5: 0, 
-    pj_2_2_5: 0, pj_2_5_3: 0, pj_mas_3: 0,
-    resiembra_con_distancia: 0, resiembra_sin_distancia: 0, 
-    planta_reinas_con_distancia: 0, planta_reina_sin_distancia: 0,
-    plantas_eliminadas_bien: 0, plantas_eliminadas_mal: 0,
+    pc_2_2_5: 0, pc_2_5_3: 0, pc_3_3_5: 0, pj_2_2_5: 0, pj_2_5_3: 0, pj_mas_3: 0,
+    resiembra_con_distancia: 0, resiembra_sin_distancia: 0, planta_reinas_con_distancia: 0, 
+    planta_reina_sin_distancia: 0, plantas_eliminadas_bien: 0, plantas_eliminadas_mal: 0,
     espacios_con_distancia: 0, espacios_sin_distancia: 0,
     alturas_plantas: Array(25).fill(''), circunferencias_plantas: Array(25).fill(''),
-
-    // --- PASO 2: EVALUACIÓN AGRÍCOLA ---
     enfrentamiento_primarios_agri: 0, planta_mal_eliminada_agri: 0, planta_encerrada_agri: 0,
     planta_recuperar_sin_intervenir_agri: 0, planta_improductiva_agri: 0, espacio_estaquillado_sin_distancia_agri: 0,
     espacio_sin_estaquillar_agri: 0, falta_herramienta_insumo_agri: 0, planta_huerfana_sin_intervenir_agri: 0,
     resiembra_pobre_agri: 0, retorno_sin_intervenir_agri: 0, reina_fuera_especificaciones_agri: 0,
     resiembra_sin_intervenir_agri: 0, retorno_sin_seguimiento_agri: 0, mala_ejecucion_hercules_agri: 0,
-    planta_recuperar_sin_elegir_agri: 0, arbusto_area_drenajes_agri: 0, rebrotes_en_drenajes_agri: 0,
-    batea_obstruida_agri: 0, bejucos_unidades_produccion_agri: 0, espacio_marcado_vena_agri: 0,
-    sin_aporque_barrera_agri: 0, fomy_cintas_sin_recoger_agri: 0, hueco_sin_tapar_agri: 0,
-    mezcla_clones_agri: 0, planta_bruja_agri: 0, racimo_planta_seca_sin_repique_agri: 0,
     plantas_con_limite_hojas_agri: 0, planta_sin_vampirear_agri: 0, racimo_pobre_bacota_pobre_agri: 0,
-    tronco_seco_sin_eliminar_agri: 0,
-
-    // --- PASO 2: EVALUACIÓN DESMACHE ---
-    hijo_rastrero_desm: 0, enfrentamiento_primarios_desm: 0, mala_eleccion_desm: 0, desmache_lineal_desm: 0,
-    sin_elegir_orilla_desm: 0, planta_eliminada_desm: 0, hijo_al_drenaje_cable_desm: 0,
-    planta_sin_desmachar_desm: 0, hijos_continuos_desm: 0, rebrote_sin_cortar_desm: 0,
-    mal_corte_desm: 0, eleccion_temprana_edad_desm: 0, cepa_sin_doblar_desm: 0,
-    residuos_drenaje_fertilizacion_desm: 0, hueco_sin_tapar_desm: 0
+    tronco_seco_sin_eliminar_agri: 0, hijo_rastrero_desm: 0, enfrentamiento_primarios_desm: 0, 
+    mala_eleccion_desm: 0, desmache_lineal_desm: 0, sin_elegir_orilla_desm: 0, planta_eliminada_desm: 0, 
+    hijo_al_drenaje_cable_desm: 0, planta_sin_desmachar_desm: 0, hijos_continuos_desm: 0, 
+    rebrote_sin_cortar_desm: 0, mal_corte_desm: 0, eleccion_temprana_edad_desm: 0, 
+    cepa_sin_doblar_desm: 0, residuos_drenaje_fertilizacion_desm: 0, hueco_sin_tapar_desm: 0
   });
 
+  // --- 1. EFECTO: RECUPERAR DATOS SI SE REFRESCA LA PÁGINA ---
+  useEffect(() => {
+    const backup = localStorage.getItem('respaldo_formulario_banagro');
+    if (backup) {
+      try {
+        const parsed = JSON.parse(backup);
+        setForm(parsed);
+        if (parsed.lote !== "") setPaso(2); 
+      } catch (e) { console.error("Error recuperando backup", e); }
+    }
+  }, []);
+
+  // --- 2. EFECTO: GUARDAR AUTOMÁTICAMENTE MIENTRAS ESCRIBE ---
+  useEffect(() => {
+    localStorage.setItem('respaldo_formulario_banagro', JSON.stringify(form));
+  }, [form]);
+
+  // --- 3. EFECTO: BLOQUEO DE NAVEGADOR ---
+  useEffect(() => {
+    const handleBeforeUnload = (e) => {
+      if (paso === 2) { e.preventDefault(); e.returnValue = ''; }
+    };
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+  }, [paso]);
+
+  // --- RESTO DEL CÓDIGO (Cargar datos maestros, handlers, cálculos, etc.) ---
   useEffect(() => {
     const cargarDatosMaestros = async () => {
+      // --- AJUSTE SUGERIDO: CARGA INSTANTÁNEA DESDE CACHÉ ---
+      const cacheGuardado = localStorage.getItem('banareport_cache_maestro');
+      if (cacheGuardado) {
+        try {
+          const { fincas: fCache, operarios: oCache, clones: cCache } = JSON.parse(cacheGuardado);
+          setFincas(fCache || []);
+          setOperarios(oCache || []);
+          setClones(cCache || []);
+        } catch (e) { console.error("Error al leer caché inicial", e); }
+      }
+
       try {
         const { data: f } = await supabase.from('tabla_fincas').select('id, nombre, zona').eq('activo', true).order('nombre');
         const { data: o } = await supabase.from('tabla_operarios').select('id, nombre, rol').eq('activo', true).order('nombre');
         const { data: c } = await supabase.from('table_clon').select('id, nombre').eq('activo', true).order('nombre');
-        setFincas(f || []); setOperarios(o || []); setClones(c || []);
-      } catch (err) { console.error("Error cargando datos:", err); }
+        
+        if (f && o && c) {
+          setFincas(f);
+          setOperarios(o);
+          setClones(c);
+          
+          // GUARDAR RESPALDO OFFLINE PARA DATOS MAESTROS
+          const cacheMaster = { fincas: f, operarios: o, clones: c, fechaActualizacion: new Date() };
+          localStorage.setItem('banareport_cache_maestro', JSON.stringify(cacheMaster));
+        }
+      } catch (err) { 
+        console.error("Error cargando datos de red, usando caché local:", err);
+      }
     };
     if ("geolocation" in navigator) {
       navigator.geolocation.getCurrentPosition((pos) => {
@@ -75,7 +109,6 @@ const FormularioAgricultura = () => {
   }, []);
 
   const handleInputChange = (campo, valor) => setForm(prev => ({ ...prev, [campo]: valor }));
-
   const handleArrayChange = (index, valor, campo) => {
     const nuevoArray = [...form[campo]];
     nuevoArray[index] = valor;
@@ -84,19 +117,11 @@ const FormularioAgricultura = () => {
 
   const ControlContador = ({ etiqueta, campo, valor }) => (
     <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-      <button 
-        type="button" 
-        onClick={() => handleInputChange(campo, Math.max(0, parseInt(valor || 0) - 1))}
-        style={btnContadorStyle}
-      >-</button>
+      <button type="button" onClick={() => handleInputChange(campo, Math.max(0, parseInt(valor || 0) - 1))} style={btnContadorStyle}>-</button>
       <div style={{ flex: 1 }}>
         <Input8Metros etiqueta={etiqueta} tipo="number" valor={valor} alCambiar={(v) => handleInputChange(campo, v)} />
       </div>
-      <button 
-        type="button" 
-        onClick={() => handleInputChange(campo, parseInt(valor || 0) + 1)}
-        style={btnContadorStyle}
-      >+</button>
+      <button type="button" onClick={() => handleInputChange(campo, parseInt(valor || 0) + 1)} style={btnContadorStyle}>+</button>
     </div>
   );
 
@@ -116,8 +141,7 @@ const FormularioAgricultura = () => {
       'pp_1semanas', 'pp_2semanas', 'pp_3semanas', 'pp_4semanas', 'pp_5semanas', 'pp_6semanas',
       'pp_7semanas', 'pp_8semanas', 'pp_9semanas', 'pp_10semanas', 'pp_11semanas',
       'pc_2_2_5', 'pc_2_5_3', 'pc_3_3_5', 'pj_2_2_5', 'pj_2_5_3', 'pj_mas_3',
-      'resiembra_con_distancia', 'resiembra_sin_distancia', 
-      'planta_reinas_con_distancia', 'planta_reina_sin_distancia'
+      'resiembra_con_distancia', 'resiembra_sin_distancia', 'planta_reinas_con_distancia', 'planta_reina_sin_distancia'
     ];
     const totalPlantas = camposPoblacion.reduce((acc, campo) => acc + (parseInt(form[campo]) || 0), 0);
     return { total: totalPlantas, plantasHa: totalPlantas * 50 };
@@ -125,7 +149,6 @@ const FormularioAgricultura = () => {
 
   const obtenerCalculosCalidad = () => {
     const plantasEval = calcularResumenCosecha().total;
-
     const pesosAgricola = {
       enfrentamiento_primarios_agri: 3, planta_mal_eliminada_agri: 3, planta_encerrada_agri: 3,
       planta_recuperar_sin_intervenir_agri: 3, planta_improductiva_agri: 3, espacio_estaquillado_sin_distancia_agri: 3,
@@ -139,7 +162,6 @@ const FormularioAgricultura = () => {
       plantas_con_limite_hojas_agri: 1, planta_sin_vampirear_agri: 1, racimo_pobre_bacota_pobre_agri: 1,
       tronco_seco_sin_eliminar_agri: 1
     };
-
     const pesosDesmache = {
       hijo_rastrero_desm: 3, enfrentamiento_primarios_desm: 3, mala_eleccion_desm: 3, desmache_lineal_desm: 3,
       sin_elegir_orilla_desm: 3, planta_eliminada_desm: 3, hijo_al_drenaje_cable: 2,
@@ -147,170 +169,100 @@ const FormularioAgricultura = () => {
       mal_corte_desm: 1, eleccion_temprana_edad_desm: 1, cepa_sin_doblar_desm: 1,
       residuos_drenaje_fertilizacion_desm: 1, hueco_sin_tapar_desm: 1
     };
-
     const totalAgriPonderado = Object.keys(pesosAgricola).reduce((acc, campo) => acc + ((parseInt(form[campo]) || 0) * pesosAgricola[campo]), 0);
     const totalDesmPonderado = Object.keys(pesosDesmache).reduce((acc, campo) => acc + ((parseInt(form[campo]) || 0) * pesosDesmache[campo]), 0);
-
     const calidadAgri = plantasEval > 0 ? (1 - (totalAgriPonderado / plantasEval)) * 100 : 0;
     const calidadDesm = plantasEval > 0 ? (1 - (totalDesmPonderado / plantasEval)) * 100 : 0;
-
-    return { 
-      totalAgri: totalAgriPonderado, totalDesm: totalDesmPonderado, 
-      porcAgri: Math.max(0, calidadAgri).toFixed(2), porcDesm: Math.max(0, calidadDesm).toFixed(2) 
-    };
+    return { totalAgri: totalAgriPonderado, totalDesm: totalDesmPonderado, porcAgri: Math.max(0, calidadAgri).toFixed(2), porcDesm: Math.max(0, calidadDesm).toFixed(2) };
   };
 
   const irACapturaRobusta = (e) => {
     e.preventDefault();
-    if (!form.finca_id || !form.evaluador_id || !form.clon_id) {
-      alert("⚠️ Finca, Variedad y Evaluador son obligatorios.");
-      return;
-    }
+    if (!form.finca_id || !form.evaluador_id || !form.clon_id) { alert("⚠️ Finca, Variedad y Evaluador son obligatorios."); return; }
     setPaso(2);
   };
 
   const guardarTodoElFormulario = async () => {
     setLoading(true);
-    console.log("🚀 Iniciando proceso de guardado...");
+    if (!estaEnLinea()) {
+      const exito = guardarLocalmente(form);
+      setLoading(false);
+      if (exito) {
+        localStorage.removeItem('respaldo_formulario_banagro'); 
+        alert("📡 SIN CONEXIÓN: Datos guardados en el celular. Se subirán automáticamente al detectar internet.");
+        window.location.href = '/'; 
+      } else { alert("❌ Error al guardar localmente."); }
+      return;
+    }
     try {
-      // 1. TABLA MAESTRA
       const { data: maestraData, error: maestraError } = await supabase
         .from('tabla_maestra')
         .insert([{
-          finca_id: parseInt(form.finca_id),
-          clon_id: parseInt(form.clon_id),
-          evaluador_id: parseInt(form.evaluador_id),
-          agricultor_id: form.agricultor_id ? parseInt(form.agricultor_id) : null,
-          desmachador_id: form.desmachador_id ? parseInt(form.desmachador_id) : null,
-          lote: String(form.lote),
-          semana: parseInt(form.semana),
-          area_ha: parseFloat(form.area_ha) || 0,
-          punto_muestreo: parseInt(form.punto_muestreo),
-          latitud_wgs84: form.latitud_wgs84,
-          longitud_wgs84: form.longitud_wgs84
+          finca_id: parseInt(form.finca_id), clon_id: parseInt(form.clon_id), evaluador_id: parseInt(form.evaluador_id),
+          agricultor_id: form.agricultor_id ? parseInt(form.agricultor_id) : null, desmachador_id: form.desmachador_id ? parseInt(form.desmachador_id) : null,
+          lote: String(form.lote), semana: parseInt(form.semana), anio: parseInt(form.anio), area_ha: parseFloat(form.area_ha) || 0,
+          punto_muestreo: parseInt(form.punto_muestreo), latitud_wgs84: form.latitud_wgs84, longitud_wgs84: form.longitud_wgs84, observaciones_operador: form.observaciones_operador
         }]).select();
-
-      if (maestraError) {
-        console.error("❌ Error en Tabla Maestra:", maestraError);
-        throw maestraError;
-      }
+      if (maestraError) throw maestraError;
       const idMaestro = maestraData[0].id;
-      console.log("✅ Maestra guardada, ID:", idMaestro);
 
-      // 2. REPORTE COSECHA
-      const { error: cosechError } = await supabase.from('reportes_cosecha').insert([{
-        maestra_id: idMaestro,
-        plantas_prontas: parseInt(form.plantas_prontas) || 0,
-        planta_a_recuperar: parseInt(form.planta_a_recuperar) || 0,
-        plantas_improductivas: parseInt(form.plantas_improductivas) || 0,
-        plantas_huerfanas: parseInt(form.plantas_huerfanas) || 0,
-        pp_bacota: parseInt(form.pp_bacota) || 0,
-        pp_1semanas: parseInt(form.pp_1semanas) || 0, pp_2semanas: parseInt(form.pp_2semanas) || 0,
-        pp_3semanas: parseInt(form.pp_3semanas) || 0, pp_4semanas: parseInt(form.pp_4semanas) || 0,
-        pp_5semanas: parseInt(form.pp_5semanas) || 0, pp_6semanas: parseInt(form.pp_6semanas) || 0,
-        pp_7semanas: parseInt(form.pp_7semanas) || 0, pp_8semanas: parseInt(form.pp_8semanas) || 0,
-        pp_9semanas: parseInt(form.pp_9semanas) || 0, pp_10semanas: parseInt(form.pp_10semanas) || 0,
-        pp_11semanas: parseInt(form.pp_11semanas) || 0,
-        pc_2_2_5: parseInt(form.pc_2_2_5) || 0, pc_2_5_3: parseInt(form.pc_2_5_3) || 0,
-        pc_3_3_5: parseInt(form.pc_3_3_5) || 0, pj_2_2_5: parseInt(form.pj_2_2_5) || 0,
-        pj_2_5_3: parseInt(form.pj_2_5_3) || 0, pj_mas_3: parseInt(form.pj_mas_3) || 0,
-        resiembra_con_distancia: parseInt(form.resiembra_con_distancia) || 0,
-        resiembra_sin_distancia: parseInt(form.resiembra_sin_distancia) || 0,
-        planta_reinas_con_distancia: parseInt(form.planta_reinas_con_distancia) || 0,
-        planta_reina_sin_distancia: parseInt(form.planta_reina_sin_distancia) || 0,
-        plantas_eliminadas_bien: parseInt(form.plantas_eliminadas_bien) || 0,
-        plantas_eliminadas_mal: parseInt(form.plantas_eliminadas_mal) || 0,
-        espacios_con_distancia: parseInt(form.espacios_con_distancia) || 0,
-        espacios_sin_distancia: parseInt(form.espacios_sin_distancia) || 0,
-        alturas_plantas: form.alturas_plantas.map(Number),
-        circunferencias_plantas: form.circunferencias_plantas.map(Number)
+      await supabase.from('reportes_cosecha').insert([{
+        maestra_id: idMaestro, plantas_prontas: parseInt(form.plantas_prontas) || 0, planta_a_recuperar: parseInt(form.planta_a_recuperar) || 0,
+        plantas_improductivas: parseInt(form.plantas_improductivas) || 0, plantas_huerfanas: parseInt(form.plantas_huerfanas) || 0,
+        pp_bacota: parseInt(form.pp_bacota) || 0, pp_1semanas: parseInt(form.pp_1semanas) || 0, pp_2semanas: parseInt(form.pp_2semanas) || 0,
+        pp_3semanas: parseInt(form.pp_3semanas) || 0, pp_4semanas: parseInt(form.pp_4semanas) || 0, pp_5semanas: parseInt(form.pp_5semanas) || 0,
+        pp_6semanas: parseInt(form.pp_6semanas) || 0, pp_7semanas: parseInt(form.pp_7semanas) || 0, pp_8semanas: parseInt(form.pp_8semanas) || 0,
+        pp_9semanas: parseInt(form.pp_9semanas) || 0, pp_10semanas: parseInt(form.pp_10semanas) || 0, pp_11semanas: parseInt(form.pp_11semanas) || 0,
+        pc_2_2_5: parseInt(form.pc_2_2_5) || 0, pc_2_5_3: parseInt(form.pc_2_5_3) || 0, pc_3_3_5: parseInt(form.pc_3_3_5) || 0,
+        pj_2_2_5: parseInt(form.pj_2_2_5) || 0, pj_2_5_3: parseInt(form.pj_2_5_3) || 0, pj_mas_3: parseInt(form.pj_mas_3) || 0,
+        resiembra_con_distancia: parseInt(form.resiembra_con_distancia) || 0, resiembra_sin_distancia: parseInt(form.resiembra_sin_distancia) || 0,
+        planta_reinas_con_distancia: parseInt(form.planta_reinas_con_distancia) || 0, planta_reina_sin_distancia: parseInt(form.planta_reina_sin_distancia) || 0,
+        plantas_eliminadas_bien: parseInt(form.plantas_eliminadas_bien) || 0, plantas_eliminadas_mal: parseInt(form.plantas_eliminadas_mal) || 0,
+        espacios_con_distancia: parseInt(form.espacios_con_distancia) || 0, espacios_sin_distancia: parseInt(form.espacios_sin_distancia) || 0,
+        alturas_plantas: form.alturas_plantas.map(Number), circunferencias_plantas: form.circunferencias_plantas.map(Number)
       }]);
 
-      if (cosechError) {
-        console.error("❌ Error en Reporte Cosecha:", cosechError);
-        throw cosechError;
-      }
-      console.log("✅ Reporte Cosecha guardado.");
-
-      // 3. EVALUACIÓN AGRÍCOLA (Sincronizado con nombres de Supabase - Sin la "s" de planta)
-      const { error: agriError } = await supabase.from('evaluacion_agricola').insert([{
-        maestra_id: idMaestro,
-        enfrentamiento_primarios: parseInt(form.enfrentamiento_primarios_agri) || 0,
-        planta_mal_eliminada: parseInt(form.planta_mal_eliminada_agri) || 0,
-        planta_encerrada: parseInt(form.planta_encerrada_agri) || 0,
-        planta_recuperar_sin_intervenir: parseInt(form.planta_recuperar_sin_intervenir_agri) || 0,
-        planta_improductiva: parseInt(form.planta_improductiva_agri) || 0,
-        espacio_estaquillado_sin_distancia: parseInt(form.espacio_estaquillado_sin_distancia_agri) || 0,
-        espacio_sin_estaquillar: parseInt(form.espacio_sin_estaquillar_agri) || 0,
-        falta_herramienta_insumo: parseInt(form.falta_herramienta_insumo_agri) || 0,
-        planta_huerfana_sin_intervenir: parseInt(form.planta_huerfana_sin_intervenir_agri) || 0,
-        resiembra_pobre: parseInt(form.resiembra_pobre_agri) || 0,
-        retorno_sin_intervenir: parseInt(form.retorno_sin_intervenir_agri) || 0,
-        reina_fuera_especificaciones: parseInt(form.reina_fuera_especificaciones_agri) || 0,
-        resiembra_sin_intervenir: parseInt(form.resiembra_sin_intervenir_agri) || 0,
-        retorno_sin_seguimiento: parseInt(form.retorno_sin_seguimiento_agri) || 0,
-        mala_ejecucion_hercules: parseInt(form.mala_ejecucion_hercules_agri) || 0,
-        planta_recuperar_sin_elegir: parseInt(form.planta_recuperar_sin_elegir_agri) || 0,
-        arbusto_area_drenajes: parseInt(form.arbusto_area_drenajes_agri) || 0,
-        rebrotes_en_drenajes: parseInt(form.rebrotes_en_drenajes_agri) || 0,
-        batea_obstruida: parseInt(form.batea_obstruida_agri) || 0,
-        bejucos_unidades_produccion: parseInt(form.bejucos_unidades_produccion_agri) || 0,
-        espacio_marcado_vena: parseInt(form.espacio_marcado_vena_agri) || 0,
-        sin_aporque_barrera: parseInt(form.sin_aporque_barrera_agri) || 0,
-        fomy_cintas_sin_recoger: parseInt(form.fomy_cintas_sin_recoger_agri) || 0,
-        hueco_sin_tapar: parseInt(form.hueco_sin_tapar_agri) || 0,
-        mezcla_clones: parseInt(form.mezcla_clones_agri) || 0,
-        planta_bruja: parseInt(form.planta_bruja_agri) || 0,
-        racimo_planta_seca_sin_repique: parseInt(form.racimo_planta_seca_sin_repique_agri) || 0,
-        planta_con_limite_hojas: parseInt(form.plantas_con_limite_hojas_agri) || 0,
-        planta_sin_vampirear: parseInt(form.planta_sin_vampirear_agri) || 0,
-        racimo_pobre_bacota_pobre: parseInt(form.racimo_pobre_bacota_pobre_agri) || 0,
+      await supabase.from('evaluacion_agricola').insert([{
+        maestra_id: idMaestro, enfrentamiento_primarios: parseInt(form.enfrentamiento_primarios_agri) || 0, planta_mal_eliminada: parseInt(form.planta_mal_eliminada_agri) || 0,
+        planta_encerrada: parseInt(form.planta_encerrada_agri) || 0, planta_recuperar_sin_intervenir: parseInt(form.planta_recuperar_sin_intervenir_agri) || 0,
+        planta_improductiva: parseInt(form.planta_improductiva_agri) || 0, espacio_estaquillado_sin_distancia: parseInt(form.espacio_estaquillado_sin_distancia_agri) || 0,
+        espacio_sin_estaquillar: parseInt(form.espacio_sin_estaquillar_agri) || 0, falta_herramienta_insumo: parseInt(form.falta_herramienta_insumo_agri) || 0,
+        planta_huerfana_sin_intervenir: parseInt(form.planta_huerfana_sin_intervenir_agri) || 0, resiembra_pobre: parseInt(form.resiembra_pobre_agri) || 0,
+        retorno_sin_intervenir: parseInt(form.retorno_sin_intervenir_agri) || 0, reina_fuera_especificaciones: parseInt(form.reina_fuera_especificaciones_agri) || 0,
+        resiembra_sin_intervenir: parseInt(form.resiembra_sin_intervenir_agri) || 0, retorno_sin_seguimiento: parseInt(form.retorno_sin_seguimiento_agri) || 0,
+        mala_ejecucion_hercules: parseInt(form.mala_ejecucion_hercules_agri) || 0, planta_recuperar_sin_elegir: parseInt(form.planta_recuperar_sin_elegir_agri) || 0,
+        arbusto_area_drenajes: parseInt(form.arbusto_area_drenajes_agri) || 0, rebrotes_en_drenajes: parseInt(form.rebrotes_en_drenajes_agri) || 0,
+        batea_obstruida: parseInt(form.batea_obstruida_agri) || 0, bejucos_unidades_produccion: parseInt(form.bejucos_unidades_produccion_agri) || 0,
+        espacio_marcado_vena: parseInt(form.espacio_marcado_vena_agri) || 0, sin_aporque_barrera: parseInt(form.sin_aporque_barrera_agri) || 0,
+        fomy_cintas_sin_recoger: parseInt(form.fomy_cintas_sin_recoger_agri) || 0, hueco_sin_tapar: parseInt(form.hueco_sin_tapar_agri) || 0,
+        mezcla_clones: parseInt(form.mezcla_clones_agri) || 0, planta_bruja: parseInt(form.planta_bruja_agri) || 0,
+        racimo_planta_seca_sin_repique: parseInt(form.racimo_planta_seca_sin_repique_agri) || 0, planta_con_limite_hojas: parseInt(form.plantas_con_limite_hojas_agri) || 0,
+        planta_sin_vampirear: parseInt(form.planta_sin_vampirear_agri) || 0, racimo_pobre_bacota_pobre: parseInt(form.racimo_pobre_bacota_pobre_agri) || 0,
         tronco_seco_sin_eliminar: parseInt(form.tronco_seco_sin_eliminar_agri) || 0
       }]);
 
-      if (agriError) {
-        console.error("❌ Error en Eval. Agrícola:", agriError);
-        throw agriError;
-      }
-      console.log("✅ Eval. Agrícola guardada.");
-
-      // 4. EVALUACIÓN DESMACHE
-      const { error: desmError } = await supabase.from('evaluacion_desmache').insert([{
-        maestra_id: idMaestro,
-        hijo_rastrero: parseInt(form.hijo_rastrero_desm) || 0,
-        enfrentamiento_primarios: parseInt(form.enfrentamiento_primarios_desm) || 0,
-        mala_eleccion: parseInt(form.mala_eleccion_desm) || 0,
-        desmache_lineal: parseInt(form.desmache_lineal_desm) || 0,
-        sin_elegir_orilla: parseInt(form.sin_elegir_orilla_desm) || 0,
-        planta_eliminada: parseInt(form.planta_eliminada_desm) || 0,
-        hijo_al_drenaje_cable: parseInt(form.hijo_al_drenaje_cable_desm) || 0,
-        planta_sin_desmachar: parseInt(form.planta_sin_desmachar_desm) || 0,
-        hijos_continuos: parseInt(form.hijos_continuos_desm) || 0,
-        rebrote_sin_cortar: parseInt(form.rebrote_sin_cortar_desm) || 0,
-        mal_corte: parseInt(form.mal_corte_desm) || 0,
-        eleccion_temprana_edad: parseInt(form.eleccion_temprana_edad_desm) || 0,
-        cepa_sin_doblar: parseInt(form.cepa_sin_doblar_desm) || 0,
-        residuos_drenaje_fertilizacion: parseInt(form.residuos_drenaje_fertilizacion_desm) || 0,
+      await supabase.from('evaluacion_desmache').insert([{
+        maestra_id: idMaestro, hijo_rastrero: parseInt(form.hijo_rastrero_desm) || 0, enfrentamiento_primarios: parseInt(form.enfrentamiento_primarios_desm) || 0,
+        mala_eleccion: parseInt(form.mala_eleccion_desm) || 0, desmache_lineal: parseInt(form.desmache_lineal_desm) || 0,
+        sin_elegir_orilla: parseInt(form.sin_elegir_orilla_desm) || 0, planta_eliminada: parseInt(form.planta_eliminada_desm) || 0,
+        hijo_al_drenaje_cable: parseInt(form.hijo_al_drenaje_cable_desm) || 0, planta_sin_desmachar: parseInt(form.planta_sin_desmachar_desm) || 0,
+        hijos_continuos: parseInt(form.hijos_continuos_desm) || 0, rebrote_sin_cortar: parseInt(form.rebrote_sin_cortar_desm) || 0,
+        mal_corte: parseInt(form.mal_corte_desm) || 0, eleccion_temprana_edad: parseInt(form.eleccion_temprana_edad_desm) || 0,
+        cepa_sin_doblar: parseInt(form.cepa_sin_doblar_desm) || 0, residuos_drenaje_fertilizacion: parseInt(form.residuos_drenaje_fertilizacion_desm) || 0,
         hueco_sin_tapar: parseInt(form.hueco_sin_tapar_desm) || 0
       }]);
 
-      if (desmError) {
-        console.error("❌ Error en Eval. Desmache:", desmError);
-        throw desmError;
-      }
-      console.log("✅ Eval. Desmache guardada.");
-
+      localStorage.removeItem('respaldo_formulario_banagro'); 
       alert("🎉 ¡TODO SE GUARDÓ PERFECTAMENTE!");
       window.location.reload();
-
     } catch (err) {
       console.error("💥 FALLO CRÍTICO:", err);
-      alert("❌ ERROR AL GUARDAR:\n" + err.message);
-    } finally {
-      setLoading(false);
-    }
+      guardarLocalmente(form);
+      alert("⚠️ Error de red: El reporte se respaldó localmente en el celular.");
+    } finally { setLoading(false); }
   };
 
+  // --- RENDERIZADO DEL JSX ---
   return (
     <div style={{ padding: '20px', maxWidth: '600px', margin: '0 auto', backgroundColor: '#f4f7f6', minHeight: '100vh' }}>
       {paso === 1 && (
@@ -323,13 +275,9 @@ const FormularioAgricultura = () => {
                 <option value="">-- Seleccione Finca --</option>
                 {fincas.map(f => <option key={f.id} value={f.id}>{f.nombre}</option>)}
               </Input8Metros>
-
               {form.finca_id && fincas.find(f => f.id === parseInt(form.finca_id))?.zona && (
-                <div style={{ marginTop: '-10px', marginBottom: '10px', fontSize: '13px', color: '#1565c0', fontWeight: 'bold', backgroundColor: '#e3f2fd', padding: '4px 10px', borderRadius: '4px', display: 'inline-block' }}>
-                  🌍 Zona: {fincas.find(f => f.id === parseInt(form.finca_id)).zona}
-                </div>
+                <div style={{ marginTop: '-10px', marginBottom: '10px', fontSize: '13px', color: '#1565c0', fontWeight: 'bold', backgroundColor: '#e3f2fd', padding: '4px 10px', borderRadius: '4px', display: 'inline-block' }}>🌍 Zona: {fincas.find(f => f.id === parseInt(form.finca_id)).zona}</div>
               )}
-
               <Input8Metros etiqueta="Variedad (Clon)" esSelect valor={form.clon_id} alCambiar={(v) => handleInputChange('clon_id', v)}>
                 <option value="">-- Seleccione Variedad --</option>
                 {clones.map(c => <option key={c.id} value={c.id}>{c.nombre}</option>)}
@@ -353,16 +301,15 @@ const FormularioAgricultura = () => {
                </div>
              </div>
              <div style={cardStyle}>
-               <h4 style={titleStyle}>📝 Lote y Área</h4>
-               <div style={{ display: 'flex', gap: '10px' }}>
+               <h4 style={titleStyle}>📝 Lote, Año y Área</h4>
+               <div style={{ display: 'flex', gap: '8px' }}>
                  <Input8Metros etiqueta="Lote" tipo="text" valor={form.lote} alCambiar={(v) => handleInputChange('lote', v)} />
                  <Input8Metros etiqueta="Semana" tipo="number" valor={form.semana} alCambiar={(v) => handleInputChange('semana', v)} />
-                 <Input8Metros etiqueta="Área (Ha)" tipo="number" valor={form.area_ha} alCambiar={(v) => handleInputChange('area_ha', v)} />
+                 <Input8Metros etiqueta="Año" tipo="number" valor={form.anio} alCambiar={(v) => handleInputChange('anio', v)} />
+                 <Input8Metros etiqueta="Ha" tipo="number" valor={form.area_ha} alCambiar={(v) => handleInputChange('area_ha', v)} />
                </div>
              </div>
-            <div style={gpsStyle(form.latitud_wgs84)}>
-              {form.latitud_wgs84 ? `📍 GPS: ${form.latitud_wgs84.toFixed(5)}, ${form.longitud_wgs84.toFixed(5)}` : "⌛ Obteniendo GPS..."}
-            </div>
+            <div style={gpsStyle(form.latitud_wgs84)}>{form.latitud_wgs84 ? `📍 GPS: ${form.latitud_wgs84.toFixed(5)}, ${form.longitud_wgs84.toFixed(5)}` : "⌛ Obteniendo GPS..."}</div>
             <BotonGuardar cargando={false} texto="Continuar a Toma de Datos" />
             <button type="button" onClick={() => window.location.href = '/'} style={btnBackStyle}>Regresar al Menú</button>
           </form>
@@ -399,7 +346,7 @@ const FormularioAgricultura = () => {
                  ))}
                </div>
              </details>
-           </div>
+          </div>
  
            <div style={cardStyle}>
              <h4 style={titleStyle}>📊 Resumen de Población</h4>
@@ -417,16 +364,13 @@ const FormularioAgricultura = () => {
               <ControlContador etiqueta="Improductivas" campo="plantas_improductivas" valor={form.plantas_improductivas} />
               <ControlContador etiqueta="Huérfanas" campo="plantas_huerfanas" valor={form.plantas_huerfanas} />
             </div>
-
             <h5 style={{color: '#2e7d32', margin: '15px 0 10px 0'}}>Producción Pronta (Semanas)</h5>
-            
             <div style={{ marginBottom: '15px' }}>
               <Input8Metros etiqueta="Color Cinta Sem 1" esSelect valor={form.color_inicio} alCambiar={(v) => handleInputChange('color_inicio', v)}>
                 <option value="">-- Seleccione Color --</option>
                 {ORDEN_COLORES.map(col => <option key={col} value={col}>{col}</option>)}
               </Input8Metros>
             </div>
-
             <div style={grid2Col}>
               <ControlContador etiqueta="PP Bacota" campo="pp_bacota" valor={form.pp_bacota} />
               {[...Array(11)].map((_, i) => {
@@ -445,7 +389,6 @@ const FormularioAgricultura = () => {
                 );
               })}
             </div>
-            
              <h5 style={{color: '#2e7d32', margin: '15px 0 10px 0'}}>Calibres PC y PJ</h5>
              <div style={grid2Col}>
                <ControlContador etiqueta="PC 2-2.5" campo="pc_2_2_5" valor={form.pc_2_2_5} />
@@ -467,7 +410,6 @@ const FormularioAgricultura = () => {
                <ControlContador etiqueta="Espacio s/d" campo="espacios_sin_distancia" valor={form.espacios_sin_distancia} />
              </div>
           </details>
-          
           <div style={cardStyle}>
              <h4 style={titleStyle}>📉 Resumen de Calidad Técnica</h4>
              <div style={resumenCosechaStyle}>
@@ -478,7 +420,6 @@ const FormularioAgricultura = () => {
                <div style={statRowStyle}><span>Calidad Desmache:</span><b style={{color: '#1565c0'}}>{obtenerCalculosCalidad().porcDesm}%</b></div>
              </div>
            </div>
- 
            <details style={cardStyle}>
              <summary style={titleStyle}>🚜 Defectos Agrícola y Desmache</summary>
              <h5 style={{color: '#2e7d32'}}>Agrícola</h5>
@@ -534,7 +475,15 @@ const FormularioAgricultura = () => {
                <ControlContador etiqueta="Hueco s/Tapa" campo="hueco_sin_tapar_desm" valor={form.hueco_sin_tapar_desm} />
              </div>
            </details>
- 
+           <div style={cardStyle}>
+             <h4 style={titleStyle}>📝 Observaciones del Evaluador</h4>
+             <textarea 
+               placeholder="Escriba aquí notas adicionales sobre la evaluación general..."
+               value={form.observaciones_operador}
+               onChange={(e) => handleInputChange('observaciones_operador', e.target.value)}
+               style={{ width: '100%', height: '100px', borderRadius: '8px', border: '1px solid #ccc', padding: '10px', fontSize: '14px', fontFamily: 'inherit', resize: 'none', boxSizing: 'border-box' }}
+             />
+           </div>
            <BotonGuardar cargando={loading} texto="Guardar Todo" alHacerClic={guardarTodoElFormulario} />
            <button onClick={() => setPaso(1)} style={btnBackStyle}>Regresar</button>
         </div>
@@ -543,7 +492,6 @@ const FormularioAgricultura = () => {
   );
 };
 
-// --- ESTILOS ---
 const btnContadorStyle = { backgroundColor: '#1b5e20', color: 'white', border: 'none', borderRadius: '4px', width: '28px', height: '28px', fontSize: '18px', fontWeight: 'bold', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', marginTop: '12px' };
 const cardStyle = { background: 'white', padding: '15px', borderRadius: '12px', boxShadow: '0 2px 8px rgba(0,0,0,0.05)', marginBottom: '15px' };
 const titleStyle = { marginTop: 0, marginBottom: '10px', color: '#2e7d32', fontSize: '15px', fontWeight: 'bold' };

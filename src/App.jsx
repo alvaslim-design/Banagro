@@ -7,6 +7,8 @@ import FormularioAgricultura from './pages/FormularioAgricultura';
 import Admin from './pages/Admin';
 import Reportes from './pages/Reportes';
 import Mapas from './pages/Mapas';
+// Nueva importación para la edición
+import EditarReporte from './pages/EditarReporte'; 
 
 // Estilos
 import './styles/App.css';
@@ -24,6 +26,9 @@ function App() {
           <Route path="/admin" element={<Admin />} />
           <Route path="/reportes" element={<Reportes />} />
           <Route path="/mapas" element={<Mapas />} />
+
+          {/* Nueva ruta para realizar modificaciones mediante el ID */}
+          <Route path="/editar-reporte/:id" element={<EditarReporte />} />
         </Routes>
       </div>
     </Router>

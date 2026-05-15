@@ -396,7 +396,7 @@ const ReportesBanagro = () => {
         </div>
       </div>
 
-{/* --- SECCIÓN 2: RESUMEN GENERAL --- */}
+      {/* --- SECCIÓN 2: RESUMEN GENERAL --- */}
       <div style={{ marginTop: '30px' }}>
         <h2 style={{ color: '#1b5e20', borderLeft: '5px solid #2e7d32', paddingLeft: '15px', marginBottom: '20px' }}>
           📑 Resumen General de la Tabla Consolidada
@@ -438,20 +438,13 @@ const ReportesBanagro = () => {
           </div>
 
           <div style={{ overflowX: 'auto', maxHeight: '500px', border: '1px solid #eee', borderRadius: '8px' }}>
-            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '11px', minWidth: '2200px' }}>
+            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '11px', minWidth: '1800px' }}>
               <thead style={{ background: '#f8faf9', position: 'sticky', top: 0, zIndex: 1, boxShadow: '0 1px 2px rgba(0,0,0,0.1)' }}>
                 <tr>
                   <th style={thMiniStyle}>Finca</th><th style={thMiniStyle}>Año</th><th style={thMiniStyle}>Sem</th><th style={thMiniStyle}>Lote</th>
                   <th style={thMiniStyle}>Área (Ha)</th><th style={thMiniStyle}>Agricultor</th><th style={thMiniStyle}>Desmachador</th>
-                  <th style={thMiniStyle}>Pl. Eval.</th><th style={thMiniStyle}>Pl/Ha</th>
-                  {/* NUEVAS COLUMNAS DE BIOMETRÍA */}
-                  <th style={{...thMiniStyle, background: '#e8f5e9'}}>Alt. Ret</th>
-                  <th style={{...thMiniStyle, background: '#e8f5e9'}}>Alt. Máx</th>
-                  <th style={{...thMiniStyle, background: '#e8f5e9'}}>Alt. Mín</th>
-                  <th style={{...thMiniStyle, background: '#e3f2fd'}}>Circ. Prom</th>
-                  <th style={{...thMiniStyle, background: '#e3f2fd'}}>Circ. Máx</th>
-                  <th style={{...thMiniStyle, background: '#e3f2fd'}}>Circ. Mín</th>
-                  <th style={thMiniStyle}>Cal. Agri%</th><th style={thMiniStyle}>Cal. Desm%</th>
+                  <th style={thMiniStyle}>Pl. Eval.</th><th style={thMiniStyle}>Pl/Ha</th><th style={thMiniStyle}>Alt. Ret</th>
+                  <th style={thMiniStyle}>Circ. Prom</th><th style={thMiniStyle}>Cal. Agri%</th><th style={thMiniStyle}>Cal. Desm%</th>
                   <th style={thMiniStyle}>%Paridas</th><th style={thMiniStyle}>%Cosech</th><th style={thMiniStyle}>%Jóvenes</th>
                   <th style={thMiniStyle}>%Prontas</th><th style={thMiniStyle}>%Resiemb</th><th style={thMiniStyle}>%Recup</th>
                   <th style={thMiniStyle}>%Huérf</th><th style={thMiniStyle}>%Improd</th>
@@ -463,16 +456,9 @@ const ReportesBanagro = () => {
                     <tr key={index} style={{ borderBottom: '1px solid #f1f1f1' }}>
                       <td style={tdMiniStyle}>{item.finca}</td><td style={tdMiniStyle}>{item.anio}</td><td style={tdMiniStyle}>{item.semana}</td><td style={tdMiniStyle}><b>{item.lote}</b></td>
                       <td style={tdMiniStyle}>{fmt(item.area_ha)}</td><td style={tdMiniStyle}>{item.nombre_agricultor || '-'}</td><td style={tdMiniStyle}>{item.nombre_desmachador || '-'}</td>
-                      <td style={tdMiniStyle}>{item.plantas_evaluadas}</td><td style={tdMiniStyle}>{fmt(item.plantas_ha)}</td>
-                      {/* MAPEADO DE BIOMETRÍA CORREGIDO */}
-                      <td style={tdMiniStyle}>{fmt(item.altura_promedio)}</td>
-                      <td style={tdMiniStyle}>{fmt(item.altura_maxima)}</td>
-                      <td style={tdMiniStyle}>{fmt(item.altura_minima)}</td>
-                      <td style={tdMiniStyle}>{fmt(item.circunferencia_promedio)}</td>
-                      <td style={tdMiniStyle}>{fmt(item.circunferencia_maximo)}</td>
-                      <td style={tdMiniStyle}>{fmt(item.circunferencia_minimo)}</td>
-                      
-                      <td style={{...tdMiniStyle, color: item.agri_calidad_pct < 85 ? 'red' : 'green', fontWeight: 'bold'}}>{fmt(item.agri_calidad_pct)}%</td>
+                      <td style={tdMiniStyle}>{item.repo_plantas_evaluadas}</td><td style={tdMiniStyle}>{fmt(item.promedio_pl_ha)}</td><td style={tdMiniStyle}>{fmt(item.repo_promedio_retorno_altura)}</td>
+                      <td style={tdMiniStyle}>{fmt(item.repo_promedio_circunferencia)}</td>
+                      <td style={{...tdMiniStyle, color: item.repo_evaluacion_agricultura < 85 ? 'red' : 'green', fontWeight: 'bold'}}>{fmt(item.repo_evaluacion_agricultura)}%</td>
                       <td style={{...tdMiniStyle, color: item.repo_evaluacion_desmache < 85 ? 'red' : 'green', fontWeight: 'bold'}}>{fmt(item.repo_evaluacion_desmache)}%</td>
                       <td style={tdMiniStyle}>{fmt(item.porcentaje_plantas_paridas)}%</td><td style={tdMiniStyle}>{fmt(item.porcentaje_plantas_cosechadas)}%</td>
                       <td style={tdMiniStyle}>{fmt(item.porcentaje_pantas_jovenes)}%</td><td style={tdMiniStyle}>{fmt(item.porcentaje_plantas_prontas)}%</td>
@@ -481,7 +467,7 @@ const ReportesBanagro = () => {
                     </tr>
                   ))
                 ) : (
-                  <tr><td colSpan="25" style={{ padding: '20px', textAlign: 'center', color: '#999' }}>{resumenFiltroFinca === '' && resumenFiltroLote === '' ? "Seleccione una Finca o un Lote para ver los informes detallados." : "No se encontraron registros."}</td></tr>
+                  <tr><td colSpan="21" style={{ padding: '20px', textAlign: 'center', color: '#999' }}>{resumenFiltroFinca === '' && resumenFiltroLote === '' ? "Seleccione una Finca o un Lote para ver los informes detallados." : "No se encontraron registros."}</td></tr>
                 )}
               </tbody>
             </table>
@@ -489,136 +475,65 @@ const ReportesBanagro = () => {
         </div>
       </div>
 
-
-
       {/* --- SECCIÓN 3: FICHA CONSOLIDADA --- */}
-{/* --- SECCIÓN 3: FICHA CONSOLIDADA --- */}
       {resumenFichaVertical && (
         <div style={{ marginTop: '30px' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-            <h2 style={{ color: '#1565c0', borderLeft: '5px solid #1565c0', paddingLeft: '15px', margin: 0 }}>
-              📑 Ficha Consolidada (Promedio de {resumenFichaVertical.count} informes)
-            </h2>
-            
-            <button 
-              onClick={() => {
-                const d2 = (val) => val ? parseFloat(val).toFixed(2) : "0.00";
-                const p = resumenFichaVertical.promedios;
-
-                const dataVertical = [
-                  ["RESUMEN DE VISITAS", ""],
-                  ["Finca:", resumenFichaVertical.finca],
-                  ["Clon:", resumenFichaVertical.clon || "N/A"],
-                  ["Año:", resumenFichaVertical.anio],
-                  ["Semana:", resumenFichaVertical.semana],
-                  ["Lotes Visitados:", resumenFichaVertical.lote],
-                  ["Área (ha):", d2(resumenFichaVertical.area)],
-                  ["Plantas Auditadas:", p.eval],
-                  ["Promedio (pl/ha):", d2(p.dens)],
-                  ["", ""],
-                  ["VARIABLES DE CAMPO", "Total", "Porcentaje"],
-                  ["Plantas Paridas", Math.round((p.paridas / 100) * p.eval), d2(p.paridas) + "%"],
-                  ["Plantas cosechadas", Math.round((p.cosech / 100) * p.eval), d2(p.cosech) + "%"],
-                  ["Pantas Jóvenes", Math.round((p.joven / 100) * p.eval), d2(p.joven) + "%"],
-                  ["Plantas Prontas", Math.round((p.prontas / 100) * p.eval), d2(p.prontas) + "%"],
-                  ["Resiembras", Math.round((p.resiemb / 100) * p.eval), d2(p.resiemb) + "%"],
-                  ["Planta a recuperar", Math.round((p.recup / 100) * p.eval), d2(p.recup) + "%"],
-                  ["Plantas Huérfanas", Math.round((p.huerf / 100) * p.eval), d2(p.huerf) + "%"],
-                  ["Plantas Improductivas", Math.round((p.improd / 100) * p.eval), d2(p.improd) + "%"],
-                  ["Espacios", p.espacios || 0, ""],
-                  ["Plantas Eliminadas", p.eliminadas || 0, ""],
-                  ["", ""],
-                  ["BIOMETRÍA", ""],
-                  ["Promedio Retorno(Altura) :", d2(p.ret) + " cm"],
-                  ["Promedio Mayor(Altura) :", d2(p.altura_maxima) + " cm"],
-                  ["Promedio Menor(Altura) :", d2(p.altura_minima) + " cm"],
-                  ["Promedio de circunferencia:", d2(p.circ) + " cm"],
-                  ["Circunferencia Mayor:", d2(p.circunferencia_maximo) + " cm"],
-                  ["Circunferencia Menor:", d2(p.circunferencia_minimo) + " cm"],
-                  ["", ""],
-                  ["CALIDAD Y PERSONAL", ""],
-                  ["Evaluación agricultura :", d2(p.agri) + "%"],
-                  ["Agricultor :", resumenFichaVertical.agricultor || "N/A"],
-                  ["Evaluación Desmache :", d2(p.desm) + "%"],
-                  ["Desmachador :", resumenFichaVertical.desmachador || "N/A"],
-                  ["", ""],
-                  ["Observaciones:", resumenFichaVertical.listaObservaciones?.join(" | ") || "Sin observaciones"]
-                ];
-
-                const ws = XLSX.utils.aoa_to_sheet(dataVertical);
-                const wb = XLSX.utils.book_new();
-                XLSX.utils.book_append_sheet(wb, ws, "Ficha");
-                XLSX.writeFile(wb, `Informe_Zona_${resumenFichaVertical.finca}_S${resumenFichaVertical.semana}.xlsx`);
-              }}
-              style={{ backgroundColor: '#1565c0', color: 'white', border: 'none', borderRadius: '5px', padding: '10px 20px', cursor: 'pointer', fontWeight: 'bold' }}
-            >
-              📥 Descargar Informe Zona
-            </button>
-          </div>
-
+          <h2 style={{ color: '#1565c0', borderLeft: '5px solid #1565c0', paddingLeft: '15px', marginBottom: '20px' }}>
+            📑 Ficha Consolidada (Promedio de {resumenFichaVertical.count} informes)
+          </h2>
           <div style={{ ...cardStyle, border: '2px solid #1565c0' }}>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '20px' }}>
-              
-              {/* BLOQUE 1: IDENTIFICACIÓN */}
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '25px' }}>
               <div style={verticalSectionStyle}>
                 <h4 style={verticalTitleStyle}>Identificación y Calidad</h4>
                 <div style={verticalRowStyle}><span>Finca:</span> <b>{resumenFichaVertical.finca}</b></div>
-                <div style={verticalRowStyle}><span>Clon:</span> <b>{resumenFichaVertical.clon || 'N/A'}</b></div>
                 <div style={verticalRowStyle}><span>Año / Sem:</span> <b>{resumenFichaVertical.anio} - Sem {resumenFichaVertical.semana}</b></div>
-                <div style={verticalRowStyle}><span>Lotes Visitados:</span> <b>{resumenFichaVertical.lote}</b></div>
-                <div style={verticalRowStyle}><span>Área (ha):</span> <b>{fmt(resumenFichaVertical.area)}</b></div>
+                <div style={verticalRowStyle}><span>Lote:</span> <b>{resumenFichaVertical.lote}</b></div>
+                <div style={verticalRowStyle}><span>Área:</span> <b>{fmt(resumenFichaVertical.area)} Ha</b></div>
                 <div style={verticalRowStyle}><span>Agricultor:</span> <b>{resumenFichaVertical.agricultor || 'N/A'}</b></div>
-                <div style={verticalRowStyle}><span>Desmachador:</span> <b>{resumenFichaVertical.desmachador || 'N/A'}</b></div>
                 <hr />
                 <div style={verticalRowStyle}>
-                  <span>Evaluación agricultura:</span> 
-                  <b style={{color: resumenFichaVertical.promedios.agri < 85 ? 'red':'green'}}>{fmt(resumenFichaVertical.promedios.agri)}%</b>
+                  <span>Calidad Agricultura:</span> 
+                  <b style={{ color: resumenFichaVertical.promedios.agri < 85 ? 'red' : 'green' }}>{fmt(resumenFichaVertical.promedios.agri)}%</b>
                 </div>
                 <div style={verticalRowStyle}>
-                  <span>Evaluación Desmache:</span> 
-                  <b style={{color: resumenFichaVertical.promedios.desm < 85 ? 'red':'green'}}>{fmt(resumenFichaVertical.promedios.desm)}%</b>
+                  <span>Calidad Desmache:</span> 
+                  <b style={{ color: resumenFichaVertical.promedios.desm < 85 ? 'red' : 'green' }}>{fmt(resumenFichaVertical.promedios.desm)}%</b>
                 </div>
               </div>
 
-              {/* BLOQUE 2: BIOMETRÍA */}
               <div style={verticalSectionStyle}>
-                <h4 style={verticalTitleStyle}>Biometría (Promedios)</h4>
-                <div style={verticalRowStyle}><span>Plantas Auditadas:</span> <b>{resumenFichaVertical.promedios.eval}</b></div>
-                <div style={verticalRowStyle}><span>Promedio (pl/ha):</span> <b>{fmt(resumenFichaVertical.promedios.dens)}</b></div>
-                <div style={verticalRowStyle}><span>Promedio Retorno:</span> <b>{fmt(resumenFichaVertical.promedios.ret)} cm</b></div>
-                <div style={verticalRowStyle}><span>Promedio Mayor (Alt):</span> <b>{fmt(resumenFichaVertical.promedios.altura_maxima)} cm</b></div>
-                <div style={verticalRowStyle}><span>Promedio Menor (Alt):</span> <b>{fmt(resumenFichaVertical.promedios.altura_minima)} cm</b></div>
-                <div style={verticalRowStyle}><span>Promedio Circunf.:</span> <b>{fmt(resumenFichaVertical.promedios.circ)} cm</b></div>
-                <div style={verticalRowStyle}><span>Circunf. Mayor:</span> <b>{fmt(resumenFichaVertical.promedios.circunferencia_maximo)} cm</b></div>
-                <div style={verticalRowStyle}><span>Circunf. Menor:</span> <b>{fmt(resumenFichaVertical.promedios.circunferencia_minimo)} cm</b></div>
+                <h4 style={verticalTitleStyle}>Biometría y Totales</h4>
+                <div style={verticalRowStyle}><span>Plantas Totales Eval:</span> <b>{resumenFichaVertical.promedios.eval}</b></div>
+                <div style={verticalRowStyle}><span>Densidad (Pl/Ha):</span> <b>{fmt(resumenFichaVertical.promedios.dens)}</b></div>
+                <div style={verticalRowStyle}><span>Altura Retorno:</span> <b>{fmt(resumenFichaVertical.promedios.ret)} cm</b></div>
+                <div style={verticalRowStyle}><span>Circunferencia:</span> <b>{fmt(resumenFichaVertical.promedios.circ)} cm</b></div>
+                <div style={verticalRowStyle}><span>Desmachador:</span> <b>{resumenFichaVertical.desmachador || 'N/A'}</b></div>
               </div>
 
-              {/* BLOQUE 3: ESTADOS DE PLANTA */}
               <div style={verticalSectionStyle}>
-                <h4 style={verticalTitleStyle}>Estados de Planta</h4>
-                <div style={{...verticalRowStyle, background: '#e3f2fd', fontWeight: 'bold'}}><span>Variable</span><span>Total | %</span></div>
-                <div style={verticalRowStyle}><span>Paridas:</span> <span>{Math.round((resumenFichaVertical.promedios.paridas/100)*resumenFichaVertical.promedios.eval)} | <b>{fmt(resumenFichaVertical.promedios.paridas)}%</b></span></div>
-                <div style={verticalRowStyle}><span>Cosechadas:</span> <span>{Math.round((resumenFichaVertical.promedios.cosech/100)*resumenFichaVertical.promedios.eval)} | <b>{fmt(resumenFichaVertical.promedios.cosech)}%</b></span></div>
-                <div style={verticalRowStyle}><span>Jóvenes:</span> <span>{Math.round((resumenFichaVertical.promedios.joven/100)*resumenFichaVertical.promedios.eval)} | <b>{fmt(resumenFichaVertical.promedios.joven)}%</b></span></div>
-                <div style={verticalRowStyle}><span>Prontas:</span> <span>{Math.round((resumenFichaVertical.promedios.prontas/100)*resumenFichaVertical.promedios.eval)} | <b>{fmt(resumenFichaVertical.promedios.prontas)}%</b></span></div>
-                <div style={verticalRowStyle}><span>Resiembras:</span> <span>{Math.round((resumenFichaVertical.promedios.resiemb/100)*resumenFichaVertical.promedios.eval)} | <b>{fmt(resumenFichaVertical.promedios.resiemb)}%</b></span></div>
-                <div style={verticalRowStyle}><span>A Recuperar:</span> <span>{Math.round((resumenFichaVertical.promedios.recup/100)*resumenFichaVertical.promedios.eval)} | <b>{fmt(resumenFichaVertical.promedios.recup)}%</b></span></div>
-                <div style={verticalRowStyle}><span>Huérfanas:</span> <span>{Math.round((resumenFichaVertical.promedios.huerf/100)*resumenFichaVertical.promedios.eval)} | <b>{fmt(resumenFichaVertical.promedios.huerf)}%</b></span></div>
-                <div style={verticalRowStyle}><span>Improductivas:</span> <span>{Math.round((resumenFichaVertical.promedios.improd/100)*resumenFichaVertical.promedios.eval)} | <b>{fmt(resumenFichaVertical.promedios.improd)}%</b></span></div>
-                <div style={verticalRowStyle}><span>Espacios:</span> <b>{resumenFichaVertical.promedios.espacios || 0}</b></div>
-                <div style={verticalRowStyle}><span>Eliminadas:</span> <b>{resumenFichaVertical.promedios.eliminadas || 0}</b></div>
+                <h4 style={verticalTitleStyle}>Porcentajes Técnicos</h4>
+                <div style={verticalRowStyle}><span>% Prontas:</span> <b>{fmt(resumenFichaVertical.promedios.prontas)}%</b></div>
+                <div style={verticalRowStyle}><span>% Paridas:</span> <b>{fmt(resumenFichaVertical.promedios.paridas)}%</b></div>
+                <div style={verticalRowStyle}><span>% Jóvenes:</span> <b>{fmt(resumenFichaVertical.promedios.joven)}%</b></div>
+                <div style={verticalRowStyle}><span>% Resiembras:</span> <b>{fmt(resumenFichaVertical.promedios.resiemb)}%</b></div>
+                <div style={verticalRowStyle}><span>% A Recuperar:</span> <b>{fmt(resumenFichaVertical.promedios.recup)}%</b></div>
+                <div style={verticalRowStyle}><span>% Improductivas:</span> <b>{fmt(resumenFichaVertical.promedios.improd)}%</b></div>
+                <div style={verticalRowStyle}><span>% Huérfanas:</span> <b>{fmt(resumenFichaVertical.promedios.huerf)}%</b></div>
               </div>
             </div>
-
-            {/* OBSERVACIONES */}
+            
             <div style={{ ...verticalSectionStyle, gridColumn: '1 / -1', marginTop: '15px', backgroundColor: '#fffde7' }}>
-              <h4 style={{ ...verticalTitleStyle, color: '#f57f17', borderBottomColor: '#f57f17' }}>📝 Observaciones Consolidadas</h4>
-              <div style={{ maxHeight: '200px', overflowY: 'auto' }}>
-                {resumenFichaVertical.listaObservaciones?.length > 0 ? (
-                  <ul style={{ margin: 0, paddingLeft: '20px', fontSize: '12.5px', fontStyle: 'italic', color: '#5d4037' }}>
-                    {resumenFichaVertical.listaObservaciones.map((obs, idx) => <li key={idx} style={{marginBottom: '5px'}}>{obs}</li>)}
+              <h4 style={{ ...verticalTitleStyle, color: '#f57f17', borderBottomColor: '#f57f17' }}>📝 Observaciones del Periodo</h4>
+              <div style={{ maxHeight: '150px', overflowY: 'auto', paddingRight: '10px' }}>
+                {resumenFichaVertical.listaObservaciones && resumenFichaVertical.listaObservaciones.length > 0 ? (
+                  <ul style={{ margin: 0, paddingLeft: '20px', fontSize: '13px', fontStyle: 'italic', color: '#5d4037' }}>
+                    {resumenFichaVertical.listaObservaciones.map((obs, idx) => (
+                      <li key={idx} style={{ marginBottom: '8px' }}>{obs}</li>
+                    ))}
                   </ul>
-                ) : <p style={{color: '#999'}}>No hay observaciones para este periodo.</p>}
+                ) : (
+                  <p style={{ fontSize: '13px', fontStyle: 'italic', margin: 0, color: '#999' }}>Sin observaciones registradas en este grupo de datos.</p>
+                )}
               </div>
             </div>
           </div>
